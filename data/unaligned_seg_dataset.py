@@ -20,7 +20,9 @@ class UnalignedSegDataset(BaseDataset):
 		self.root = opt.dataroot
 		self.dir_A = os.path.join(opt.dataroot, opt.phase + 'A')
 		self.dir_B = os.path.join(opt.dataroot, opt.phase + 'B')
-		self.max_instances = 20  # default: 20
+		# self.max_instances = 20  # default: 20
+		# self.max_instances = 3  # default: 20
+		self.max_instances = 2  # default: 20
 		self.seg_dir = 'seg'  # default: 'seg'
 
 		self.A_paths = sorted(make_dataset(self.dir_A))
@@ -37,12 +39,25 @@ class UnalignedSegDataset(BaseDataset):
 		segs = list()
 		for i in range(self.max_instances):
 			path = seg_path.replace('.png', '_{}.png'.format(i))
+			# path = seg_path.replace('.jpg', '_{}.png'.format(i))
+
+			# print "-----------------------------------------"
+			# print seg_path
+			# path = seg_path.replace('.png', '_{}.png'.format(i))
+			# print path
+			# print "-----------------------------------------"
+
 			if os.path.isfile(path):
 				seg = Image.open(path).convert('L')
 				seg = self.fixed_transform(seg, seed)
+				# print "-----------------------------------------"
+				# print seg.size()
+				# print "-----------------------------------------"
 				segs.append(seg)
 			else:
+				# segs.append(-torch.ones(1, 100, 100))
 				segs.append(-torch.ones(segs[0].size()))
+				# segs.append(torch.zeros(segs[0].size()))
 		return torch.cat(segs)
 
 	def __getitem__(self, index):
@@ -67,6 +82,11 @@ class UnalignedSegDataset(BaseDataset):
 		B = Image.open(B_path).convert('RGB')
 		A = self.fixed_transform(A, seed)
 		B = self.fixed_transform(B, seed)
+
+		# print("----------------------------")
+		# print(A_seg_path)
+		# print(B_seg_path)
+		# print("----------------------------")
 
 		A_segs = self.read_segs(A_seg_path, seed)
 		B_segs = self.read_segs(B_seg_path, seed)
